@@ -41,6 +41,11 @@ class DrawingView( context : Context, attributeSet : AttributeSet ) : View( cont
         mDrawPaint!!.strokeWidth = mBrushSize
     }
 
+    public fun setColorBrush( newColor : String ){
+        color = Color.parseColor( newColor )
+        mDrawPaint!!.color = color
+    }
+
     //view 사이즈가 변경 될 때 마다 Canvas를불러옴
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
