@@ -35,6 +35,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         btnOpenBrushDlg.setOnClickListener{
             showBrushSizeDialog()
         }
+        var btnOpenGallery : ImageButton =  findViewById(R.id.btnOpenGallery)
+        btnOpenGallery.setOnClickListener{
+
+        }
     }
 
     private fun showBrushSizeDialog(){
