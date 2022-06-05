@@ -17,6 +17,7 @@ class DrawingView( context : Context, attributeSet : AttributeSet ) : View( cont
     private var color = Color.BLACK
     private var canvas : Canvas? = null
     private var mDrawPaths = ArrayList<CustomPath>()
+    private var mDrawUndoPaths = ArrayList<CustomPath>()
 
     init{
         setUpDrawing()
@@ -33,6 +34,23 @@ class DrawingView( context : Context, attributeSet : AttributeSet ) : View( cont
         mCanvasPaint = Paint( Paint.DITHER_FLAG )
         //mBrushSize = 20.toFloat()
 
+    }
+
+    public fun undoDrawing(){
+        if( mDrawPaths.size == 0 )
+            return
+        mDrawUndoPaths.add( mDrawPaths.get(mDrawPaths.size-1) )
+        mDrawPaths.removeAt(mDrawPaths.size-1);
+        invalidate()
+    }
+
+
+    public fun redoDrawing(){
+        if( mDrawUndoPaths.size == 0 )
+            return
+        mDrawPaths.add(mDrawUndoPaths.get( mDrawUndoPaths.size-1) )
+        mDrawUndoPaths.removeAt(mDrawUndoPaths.size-1);
+        invalidate()
     }
 
     public fun setSizeBrush( newSize : Float ){

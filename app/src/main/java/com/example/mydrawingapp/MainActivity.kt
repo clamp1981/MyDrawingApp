@@ -26,6 +26,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private var drawingView : DrawingView? = null
     private var mImageButtonCurrentPaint : ImageButton? = null
+    private var btnUndo : ImageButton? = null
+    private var btnRedo : ImageButton? = null
     val openGalleryLauncher : ActivityResultLauncher<Intent> =
         registerForActivityResult( ActivityResultContracts.StartActivityForResult() ){
             result ->
@@ -83,8 +85,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
         var btnOpenGallery : ImageButton =  findViewById(R.id.btnOpenGallery)
         btnOpenGallery.setOnClickListener{
-            //Snackbar.make( it, "hi snackbar",Snackbar.LENGTH_SHORT ).show()
             requestPermisson()
+        }
+
+        btnUndo = findViewById(R.id.btnUndo )
+        btnUndo?.setOnClickListener{
+            drawingView?.undoDrawing()
+        }
+
+        btnRedo = findViewById(R.id.btnRedo )
+        btnRedo?.setOnClickListener{
+            drawingView?.redoDrawing()
         }
     }
 
