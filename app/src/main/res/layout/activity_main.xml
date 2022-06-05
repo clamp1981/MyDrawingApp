@@ -115,6 +115,22 @@
             />
 
         <ImageButton
+            android:id="@+id/btnUndo"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/undo"
+            android:scaleType="fitXY"
+            />
+
+        <ImageButton
+            android:id="@+id/btnRedo"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/redo"
+            android:scaleType="fitXY"
+            />
+
+        <ImageButton
             android:id="@+id/btnOpenBrushSizeDlg"
             android:layout_width="50dp"
             android:layout_height="50dp"
