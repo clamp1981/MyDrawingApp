@@ -4,23 +4,33 @@ package com.example.mydrawingapp
 import android.Manifest
 import android.app.Dialog
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Message
 import android.provider.MediaStore
 import android.view.View
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
 import androidx.core.view.get
 import androidx.core.view.iterator
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.lang.Exception
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -85,7 +95,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
         var btnOpenGallery : ImageButton =  findViewById(R.id.btnOpenGallery)
         btnOpenGallery.setOnClickListener{
-            requestPermisson()
+            requestPermission()
+        }
+
+        var btnSave : ImageButton = findViewById(R.id.btnSave)
+        btnSave.setOnClickListener{
+
+
+            if( isReadPermissionAllowed()){
+                lifecycleScope.launch {
+                    val fldrawingView : FrameLayout = findViewById(R.id.fl_draw_views )
+                    saveBitmapFile( getBitmapFormView( fldrawingView ))
+                }
+
+            }
         }
 
         btnUndo = findViewById(R.id.btnUndo )
@@ -99,7 +122,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun requestPermisson(){
+    private fun isReadPermissionAllowed(): Boolean {
+        val result = ContextCompat.checkSelfPermission( this,Manifest.permission.READ_EXTERNAL_STORAGE )
+        return  result == PackageManager.PERMISSION_GRANTED
+    }
+
+
+    private fun requestPermission(){
 
         if( ActivityCompat.shouldShowRequestPermissionRationale(
                 this,
@@ -108,9 +137,59 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             "MyDrawingApp needs to Access Your External Storage!")
         }else{
             requestPermission.launch( arrayOf(
-                Manifest.permission.READ_EXTERNAL_STORAGE  ))
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE))
         }
 
+    }
+
+    private fun getBitmapFormView( view : View ) : Bitmap {
+        val returnBitmap = createBitmap( view.width, view.height, Bitmap.Config.ARGB_8888 );
+        val canvas = Canvas( returnBitmap );
+        val bgDrawable = view.background
+        if( bgDrawable != null )
+            bgDrawable.draw(canvas)
+        else
+            canvas.drawColor(Color.WHITE)
+
+        view.draw( canvas )
+
+        return  returnBitmap
+    }
+
+    private suspend fun saveBitmapFile( bitmap : Bitmap? ) : String {
+        var result = ""
+        withContext(Dispatchers.IO){
+            if( bitmap != null ){
+
+                try{
+                    val bytes = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 90 , bytes )
+                    val file = File(externalCacheDir?.absoluteFile.toString()
+                            + File.separator + "MyDrawingApp_"
+                    + System.currentTimeMillis() / 1000 + ".jpg")
+
+                    val file_stream = FileOutputStream( file )
+                    file_stream.write(bytes.toByteArray())
+                    file_stream.close()
+
+                    result = file.absolutePath;
+                    var ree = result.substring(60)
+                    runOnUiThread {
+                        if( result.isNotEmpty() ){
+                            Toast.makeText(this@MainActivity
+                                , "File Save Successfully : $result"
+                                , Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }catch ( e : Exception ){
+                    result = ""
+                    e.printStackTrace()
+                }
+            }
+        }
+
+        return  result
     }
 
     private fun showBrushSizeDialog(){
