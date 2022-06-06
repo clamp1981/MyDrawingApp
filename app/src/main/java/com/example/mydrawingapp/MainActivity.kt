@@ -2,12 +2,14 @@ package com.example.mydrawingapp
 
 
 import android.Manifest
+import android.R.attr
 import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.media.MediaScannerConnection
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Message
@@ -31,6 +33,12 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.lang.Exception
+import android.R.attr.path
+import android.media.MediaScannerConnection.OnScanCompletedListener
+import android.media.tv.TvContract.AUTHORITY
+import android.net.Uri
+import androidx.core.content.FileProvider
+
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -38,6 +46,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private var mImageButtonCurrentPaint : ImageButton? = null
     private var btnUndo : ImageButton? = null
     private var btnRedo : ImageButton? = null
+    private var customProgressDlg : Dialog? = null
     val openGalleryLauncher : ActivityResultLauncher<Intent> =
         registerForActivityResult( ActivityResultContracts.StartActivityForResult() ){
             result ->
@@ -100,14 +109,40 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         var btnSave : ImageButton = findViewById(R.id.btnSave)
         btnSave.setOnClickListener{
-
-
             if( isReadPermissionAllowed()){
+                showProgressDialog()
                 lifecycleScope.launch {
                     val fldrawingView : FrameLayout = findViewById(R.id.fl_draw_views )
-                    saveBitmapFile( getBitmapFormView( fldrawingView ))
+                    val result = saveBitmapFile( getBitmapFormView( fldrawingView ))
+                    runOnUiThread {
+                        cancelProgressDialog()
+                        if( result.isNotEmpty() ){
+                            Toast.makeText(this@MainActivity
+                                , "File Save Successfully"
+                                , Toast.LENGTH_LONG).show()
+                        }else{
+                            Toast.makeText(this@MainActivity
+                                , "fail"
+                                , Toast.LENGTH_LONG).show()
+                        }
+                    }
                 }
+            }
+        }
 
+
+        var btnShare : ImageButton = findViewById(R.id.btnShare)
+        btnShare.setOnClickListener{
+            if( isReadPermissionAllowed()){
+                showProgressDialog()
+                lifecycleScope.launch {
+                    val fldrawingView : FrameLayout = findViewById(R.id.fl_draw_views )
+                    val result = saveBitmapFile( getBitmapFormView( fldrawingView ))
+                    runOnUiThread {
+                        cancelProgressDialog()
+                        shareImage(result)
+                    }
+                }
             }
         }
 
@@ -143,6 +178,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     }
 
+    private fun showProgressDialog(){
+        customProgressDlg = Dialog(this@MainActivity)
+        customProgressDlg?.setContentView(R.layout.dialog_custom_progress)
+        customProgressDlg?.show()
+    }
+
+    private fun cancelProgressDialog(){
+        if( customProgressDlg != null )
+            customProgressDlg?.dismiss()
+        customProgressDlg = null
+    }
+
     private fun getBitmapFormView( view : View ) : Bitmap {
         val returnBitmap = createBitmap( view.width, view.height, Bitmap.Config.ARGB_8888 );
         val canvas = Canvas( returnBitmap );
@@ -161,27 +208,21 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         var result = ""
         withContext(Dispatchers.IO){
             if( bitmap != null ){
-
                 try{
                     val bytes = ByteArrayOutputStream()
                     bitmap.compress(Bitmap.CompressFormat.PNG, 90 , bytes )
-                    val file = File(externalCacheDir?.absoluteFile.toString()
-                            + File.separator + "MyDrawingApp_"
-                    + System.currentTimeMillis() / 1000 + ".jpg")
+
+                    val file = File(filesDir?.absoluteFile.toString(), "MyDrawingApp_"
+                            + System.currentTimeMillis() / 1000 + ".jpg" )
+
 
                     val file_stream = FileOutputStream( file )
                     file_stream.write(bytes.toByteArray())
                     file_stream.close()
 
                     result = file.absolutePath;
-                    var ree = result.substring(60)
-                    runOnUiThread {
-                        if( result.isNotEmpty() ){
-                            Toast.makeText(this@MainActivity
-                                , "File Save Successfully : $result"
-                                , Toast.LENGTH_LONG).show()
-                        }
-                    }
+
+
                 }catch ( e : Exception ){
                     result = ""
                     e.printStackTrace()
@@ -243,6 +284,33 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             drawingView?.setColorBrush(colorTag)
             mImageButtonCurrentPaint = clickedBtn
         }
+
+
+    }
+
+
+    private fun shareImage( result : String ){
+
+        MediaScannerConnection.scanFile( this@MainActivity, arrayOf(result), null ){
+            path, _ ->
+            // Use the FileProvider to get a content URI
+            val requestFile = File(path)
+            val fileUri: Uri? = try {
+                FileProvider.getUriForFile(
+                    this@MainActivity,
+                    "com.mydrawingapp.fileprovider",
+                    requestFile)
+            } catch (e: IllegalArgumentException) {
+                null
+            }
+
+
+            val shareIntent = Intent()
+            shareIntent.action = Intent.ACTION_SEND
+            shareIntent.type = "image/jpg"
+            shareIntent.putExtra( Intent.EXTRA_STREAM, fileUri )
+            startActivity( Intent.createChooser( shareIntent, "Share"))
+            }
 
 
     }
