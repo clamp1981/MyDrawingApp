@@ -138,6 +138,14 @@
             android:scaleType="fitXY"
             />
 
+        <ImageButton
+            android:id="@+id/btnSave"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/save"
+            android:scaleType="fitXY"
+            />
+
     </LinearLayout>
 
 
