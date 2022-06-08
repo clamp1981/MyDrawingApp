@@ -38,11 +38,13 @@ import android.media.MediaScannerConnection.OnScanCompletedListener
 import android.media.tv.TvContract.AUTHORITY
 import android.net.Uri
 import androidx.core.content.FileProvider
+import com.example.mydrawingapp.databinding.ActivityMainBinding
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
-    private var drawingView : DrawingView? = null
+    private var binding : ActivityMainBinding? = null
+    //private var drawingView : DrawingView? = null
     private var mImageButtonCurrentPaint : ImageButton? = null
     private var btnUndo : ImageButton? = null
     private var btnRedo : ImageButton? = null
@@ -84,7 +86,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        //setContentView(R.layout.activity_main)
+        setContentView(binding?.root)
+
 
         val linearLayoutPaintColors = findViewById<LinearLayout>(R.id.ll_paint_colors)
         for(  paint_color in linearLayoutPaintColors ) (paint_color as ImageButton).setOnClickListener(this)
@@ -95,20 +100,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         )
 
 
-        drawingView = findViewById(R.id.dvDrawingView)
-        drawingView?.setSizeBrush( 10.toFloat() )
-        drawingView?.setColorBrush( mImageButtonCurrentPaint!!.tag.toString() )
-        var btnOpenBrushDlg : ImageButton = findViewById(R.id.btnOpenBrushSizeDlg)
-        btnOpenBrushDlg.setOnClickListener{
+        binding?.dvDrawingView?.setSizeBrush( 10.toFloat() )
+        binding?.dvDrawingView?.setColorBrush( mImageButtonCurrentPaint!!.tag.toString() )
+        binding?.btnOpenBrushSizeDlg?.setOnClickListener{
             showBrushSizeDialog()
         }
-        var btnOpenGallery : ImageButton =  findViewById(R.id.btnOpenGallery)
-        btnOpenGallery.setOnClickListener{
+        binding?.btnOpenGallery?.setOnClickListener{
             requestPermission()
         }
 
-        var btnSave : ImageButton = findViewById(R.id.btnSave)
-        btnSave.setOnClickListener{
+        binding?.btnSave?.setOnClickListener{
             if( isReadPermissionAllowed()){
                 showProgressDialog()
                 lifecycleScope.launch {
@@ -130,9 +131,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
         }
 
-
-        var btnShare : ImageButton = findViewById(R.id.btnShare)
-        btnShare.setOnClickListener{
+        binding?.btnShare?.setOnClickListener{
             if( isReadPermissionAllowed()){
                 showProgressDialog()
                 lifecycleScope.launch {
@@ -146,15 +145,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
         }
 
-        btnUndo = findViewById(R.id.btnUndo )
-        btnUndo?.setOnClickListener{
-            drawingView?.undoDrawing()
+
+        binding?.btnUndo?.setOnClickListener{
+            binding?.dvDrawingView?.undoDrawing()
         }
 
-        btnRedo = findViewById(R.id.btnRedo )
-        btnRedo?.setOnClickListener{
-            drawingView?.redoDrawing()
+        binding?.btnRedo?.setOnClickListener{
+            binding?.dvDrawingView?.redoDrawing()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        binding = null
     }
 
     private fun isReadPermissionAllowed(): Boolean {
@@ -241,17 +244,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val btnMediumBtn : ImageButton =brushDlg.findViewById(R.id.ib_medium_brush)
         val btnLargeBtn : ImageButton =brushDlg.findViewById(R.id.ib_large_brush)
         btnSmallBtn.setOnClickListener{
-            drawingView?.setSizeBrush( 10.toFloat() )
+            binding?.dvDrawingView?.setSizeBrush( 10.toFloat() )
             brushDlg.dismiss()
         }
 
         btnMediumBtn.setOnClickListener{
-            drawingView?.setSizeBrush( 15.toFloat() )
+            binding?.dvDrawingView?.setSizeBrush( 15.toFloat() )
             brushDlg.dismiss()
         }
 
         btnLargeBtn.setOnClickListener{
-            drawingView?.setSizeBrush( 20.toFloat() )
+            binding?.dvDrawingView?.setSizeBrush( 20.toFloat() )
             brushDlg.dismiss()
         }
 
@@ -281,7 +284,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 ContextCompat.getDrawable( this, R.drawable.pallet_normal )
             )
             var colorTag = clickedBtn.tag.toString();
-            drawingView?.setColorBrush(colorTag)
+            binding?.dvDrawingView?.setColorBrush(colorTag)
             mImageButtonCurrentPaint = clickedBtn
         }
 
